@@ -16,9 +16,9 @@
         <TextView
             android:id="@+id/locationName"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:text="location name bla bbla bla"
-            android:textSize="@android:dimen/app_icon_size" />
+            android:layout_height="144dp"
+            android:text=""
+            android:textSize="30dp" />
 
         <LinearLayout
             android:layout_width="384dp"
@@ -43,14 +43,14 @@
         <TextView
             android:id="@+id/availableSlots"
             android:layout_width="match_parent"
-            android:layout_height="88dp"
-            android:textSize="@android:dimen/app_icon_size"
+            android:layout_height="142dp"
+            android:text=""
             android:textAlignment="center"
-            android:text="100 vehicles" />
+            android:textSize="@android:dimen/app_icon_size" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="416dp"
             android:orientation="horizontal">
 
             <Button
@@ -58,16 +58,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textSize="@android:dimen/app_icon_size"
-                android:text="-" />
+                android:text="-"
+                android:textSize="@android:dimen/app_icon_size" />
 
             <Button
                 android:id="@+id/increment"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textSize="@android:dimen/app_icon_size"
-                android:text="+" />
+                android:text="+"
+                android:textSize="@android:dimen/app_icon_size" />
         </LinearLayout>
+
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

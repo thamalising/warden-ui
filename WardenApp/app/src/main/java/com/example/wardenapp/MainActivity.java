@@ -32,6 +32,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -41,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
     ArrayList<LocationData> locationDataList = new ArrayList<LocationData>();
     int currentIndex = 0;
+    private Timer timer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,10 +56,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 --currentIndex;
-                if (currentIndex < 0) {
-                    currentIndex = locationDataList.size()  -1;
-                }
-                execute();
+                updateWindow();
             }
         });
         nextButton = (ImageButton) findViewById(R.id.next);
@@ -64,12 +64,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 ++currentIndex;
-                if (locationDataList.size() <= currentIndex) {
-                    currentIndex = 0;
-                    loadMyLocations();
-                } else {
-                    execute();
-                }
+                updateWindow();
             }
         });
         locationName = (TextView) findViewById(R.id.locationName);
@@ -80,13 +75,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (locationDataList.isEmpty()) return;
-
-                LocationData l = locationDataList.get(currentIndex);
-                --l.bc;
-                if (l.bc < 0) {
-                    l.bc = 0;
-                }
-                execute();
                 updateAvailability("minus");
             }
         });
@@ -95,49 +83,41 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (locationDataList.isEmpty()) return;
-
-                LocationData l = locationDataList.get(currentIndex);
-                ++l.bc;
-                if ( l.bc > l.slots){
-                    l.bc = l.slots;
-                }
-                execute();
                 updateAvailability("plus");
             }
         });
         availableSlots = (TextView) findViewById(R.id.availableSlots);
 
         AndroidNetworking.initialize(getApplicationContext());
-        loadMyLocations();
-    }
-
-    public void execute()
-    {
-        String host  = getString(R.string.host);
-        String myId = getString(R.string.myid);
-        AndroidNetworking.get("http://" + host + "/ami/" + myId)
-        .build()
-        .getAsJSONObject(new JSONObjectRequestListener() {
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-                    if (0 == response.getInt("locations")) {
-                        locationDataList.clear();
-                    }
-                    showCurrent();
-                } catch (JSONException e) {
-                    System.out.println("------ error: isValid: " + response);
-                }
-            }
-            @Override
-            public void onError(ANError error) {
-                System.out.println("--------error: isValid: " + error);
-            }
-        });
+        startTimer();
     }
 
     public void updateAvailability(String op)
     {
+        if (locationDataList.size() <= currentIndex) {
+            currentIndex = locationDataList.size() - 1;
+        }
+
+        if (currentIndex < 0) {
+            currentIndex = 0;
+        }
+
+        if (op.equalsIgnoreCase("minus")) {
+            LocationData l = locationDataList.get(currentIndex);
+            --l.bc;
+            if (l.bc < 0)
+                l.bc = 0;
+        }
+        if (op.equalsIgnoreCase("plus")) {
+            LocationData l = locationDataList.get(currentIndex);
+            ++l.bc;
+            if ( l.bc > l.slots)
+                l.bc = l.slots;
+        }
+
+        // how updated slots in window
+        updateWindow();
+
         if (locationDataList.isEmpty()) return;
 
         String host  = getString(R.string.host);
@@ -145,9 +125,9 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("updateAvailability: " + host + " op:" + op);
         AndroidNetworking.put("http://" + host + "/availability/" + op + "?location-id=" + locationId)
         .build()
-        .getAsJSONArray(new JSONArrayRequestListener() {
+        .getAsJSONObject(new JSONObjectRequestListener() {
             @Override
-            public void onResponse(JSONArray response) {
+            public void onResponse(JSONObject response) {
                 System.out.println("------ updateAvailability: " + response);
             }
             @Override
@@ -157,10 +137,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void showCurrent()
+    public void updateWindow()
     {
-        if (locationDataList.size() > 0)
-        {
+        if (locationDataList.size() <= currentIndex) {
+            currentIndex = locationDataList.size() - 1;
+        }
+
+        if (currentIndex < 0) {
+            currentIndex = 0;
+        }
+
+        if (locationDataList.size() > currentIndex) {
             LocationData l = locationDataList.get(currentIndex);
             locationName.setText(l.locationName + ", "+ l.city);
             Integer freeSlots = l.slots  - l.bc;
@@ -171,62 +158,66 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        if (locationDataList.isEmpty())
-        {
+        if (locationDataList.isEmpty()) {
             locationName.setText("");
             availableSlots.setText("");
             availableSlots.setTextColor(getColor(R.color.colorAccent));
         }
     }
 
+    public void startTimer() {
+        timer = new Timer();
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        System.out.println("get locations...");
+                        loadMyLocations();
+                    }
+                });
+            }
+        };
+        timer.scheduleAtFixedRate(timerTask, 0, 10000);
+    }
+
     public void loadMyLocations()
     {
-        locationDataList.clear();
         String host  = getString(R.string.host);
         String myId = getString(R.string.myid);
         System.out.println("loadData: " + host + " by:" + myId);
-        AndroidNetworking.post("http://" + host + "/my-locations/" + myId)
-            .build()
-            .getAsJSONArray(new JSONArrayRequestListener() {
-                @Override
-                public void onResponse(JSONArray response) {
-                    System.out.println("------ my loactions: " + response.length());
-                    for(int i = 0; i < response.length(); ++i) {
+        AndroidNetworking.get("http://" + host + "/my-locations/" + myId)
+        .build()
+        .getAsJSONArray(new JSONArrayRequestListener() {
+            @Override
+            public void onResponse(JSONArray response) {
+                System.out.println("------ my loactions: " + response.length());
+                // clear exsisting data before add new
+                locationDataList.clear();
+                for(int i = 0; i < response.length(); ++i) {
+                    try {
+                        JSONObject location = response.getJSONObject(i);
 
-                        try {
-                            JSONObject location = response.getJSONObject(i);
-//                                System.out.println("------ my loactions: " + location);
-                            Integer locationId = location.getInt("id");
-                            Integer slots = location.getInt("slots");
-                            Integer bc = location.getInt("bc");
-                            String city = location.getString("city");
-                            String name = location.getString("lname");
+                        LocationData l = new LocationData();
+                        l.locationId = location.getInt("id");
+                        l.slots = location.getInt("slots");
+                        l.bc = location.getInt("bc");
+                        l.city = location.getString("city");
+                        l.locationName = location.getString("lname");
 
-                            LocationData l = new LocationData();
-                            l.locationId = locationId;
-                            l.slots = slots;
-                            l.bc = bc;
-                            l.city = city;
-                            l.locationName = name;
-
-                            locationDataList.add(l);
-                            System.out.println("------ mylocations: "
-                                    + i + "[id:" +locationId +" bc:"+bc +"/" + slots +"]");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    if (locationDataList.size() > 0) {
-                        currentIndex = 0;
-                        showCurrent();
+                        locationDataList.add(l);
+                        System.out.println("------ mylocations: " + l.toString());
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
                 }
-                @Override
-                public void onError(ANError error) {
-                    System.out.println("--------error: get ownloations: " + error);
-                }
-            });
-
+                updateWindow();
+            }
+            @Override
+            public void onError(ANError error) {
+                System.out.println("--------error: get ownloations: " + error);
+            }
+        });
     }
 }

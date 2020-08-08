@@ -60,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (locationDataList.isEmpty()) return;
                 updateAvailability("minus");
             }
         });
@@ -68,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
         subButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (locationDataList.isEmpty()) return;
                 updateAvailability("plus");
             }
         });
@@ -80,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void updateAvailability(String op)
     {
+        if (locationDataList.isEmpty()) return;
+
         if (locationDataList.size() <= currentIndex) {
             currentIndex = locationDataList.size() - 1;
         }
@@ -103,8 +103,6 @@ public class MainActivity extends AppCompatActivity {
 
         // how updated slots in window
         updateWindow();
-
-        if (locationDataList.isEmpty()) return;
 
         String host  = getString(R.string.host);
         int locationId = locationDataList.get(currentIndex).locationId;
@@ -165,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         };
+        // 10 sec timer to get location from web-service
         timer.scheduleAtFixedRate(timerTask, 0, 10000);
     }
 

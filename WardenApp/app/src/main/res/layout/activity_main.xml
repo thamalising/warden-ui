@@ -15,14 +15,14 @@
 
         <TextView
             android:id="@+id/locationName"
-            android:layout_width="match_parent"
+            android:layout_width="383dp"
             android:layout_height="144dp"
             android:text=""
             android:textSize="30dp" />
 
         <LinearLayout
-            android:layout_width="384dp"
-            android:layout_height="130dp"
+            android:layout_width="383dp"
+            android:layout_height="wrap_content"
             android:orientation="horizontal">
 
             <ImageButton
@@ -40,17 +40,37 @@
                 app:srcCompat="@android:drawable/ic_media_next" />
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="128dp"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/token"
+                android:layout_width="match_parent"
+                android:layout_height="59dp"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:text="" />
+
+            <Button
+                android:id="@+id/login"
+                android:layout_width="match_parent"
+                android:layout_height="82dp"
+                android:text="Login" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/availableSlots"
-            android:layout_width="match_parent"
+            android:layout_width="381dp"
             android:layout_height="142dp"
             android:text=""
             android:textAlignment="center"
             android:textSize="@android:dimen/app_icon_size" />
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="416dp"
+            android:layout_width="383dp"
+            android:layout_height="wrap_content"
             android:orientation="horizontal">
 
             <Button
@@ -68,6 +88,7 @@
                 android:layout_weight="1"
                 android:text="+"
                 android:textSize="@android:dimen/app_icon_size" />
+
         </LinearLayout>
 
     </LinearLayout>
